@@ -1,0 +1,74 @@
+name: Deploy
+
+# Every push to main (including "Merge & deploy" from Slack) publishes the site.
+# The backend is redeployed only when worker/ changed.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL: ${{ vars.SLACK_CHANGES_CHANNEL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            worker/package-lock.json
+
+      - name: Build and test the site
+        working-directory: site
+        env:
+          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: Publish the site
+        run: npx --yes wrangler@4 pages deploy site/dist --project-name "${{ vars.PAGES_PROJECT }}" --branch main --commit-dirty=true
+
+      - name: Deploy the backend if it changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || git diff --name-only HEAD~1 HEAD | grep -q '^worker/'; then
+            cd worker && npm ci && npm test && npx tsc --noEmit && npx wrangler deploy
+          else
+            echo "Backend unchanged"
+          fi
+
+      - name: Tell Slack it's live
+        env:
+          SITE_URL: https://www.urallcarepharmacy.com
+        run: |
+          msg=$(git log -1 --format=%B)
+          export THREAD_TS=$(echo "$msg" | sed -n 's/^Slack-Thread: \([0-9.]*\)$/\1/p' | tail -n1)
+          export COMMIT_TITLE=$(echo "$msg" | head -n1)
+          node scripts/slack-notify.mjs live
+
+      - name: Tell Slack it failed
+        if: failure()
+        run: |
+          curl -s -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"channel\":\"$SLACK_CHANNEL\",\"text\":\":x: Publishing the website failed. The live site was not changed. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run log>\"}"

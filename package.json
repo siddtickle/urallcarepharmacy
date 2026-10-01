@@ -1,0 +1,9 @@
+{
+  "name": "allcare-pharmacy",
+  "private": true,
+  "type": "module",
+  "description": "AllCare Pharmacy website, backend and Slack automation. See SETUP.md.",
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

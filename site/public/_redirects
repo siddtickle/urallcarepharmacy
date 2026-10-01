@@ -1,0 +1,11 @@
+# Old WordPress page addresses → new homepage sections (keeps search rank and old bookmarks working)
+/pharmacy-and-medical-supplies-contact-us            /#contact-form  301
+/pharmacy-and-medical-supplies-reviews               /#reviews       301
+/pharmacy-and-medical-supplies-services              /#services      301
+/pharmacy-and-medical-supplies-pharmacy-profile      /#about         301
+/pharmacy-and-medical-supplies-refill-prescription   /#refill        301
+/pharmacy-and-medical-supplies-transfer-rx           /#refill        301
+/pharmacy-and-medical-supplies-auto-rx-refills       /#refill        301
+/pharmacy-and-medical-supplies-delivery-services     /#refill        301
+/privacy-policy                                      /privacy        301
+/pharmacy-and-medical-supplies-*                     /               301

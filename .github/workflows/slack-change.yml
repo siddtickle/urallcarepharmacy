@@ -1,0 +1,181 @@
+name: Website change from Slack
+
+# Started by the backend when someone posts in #website-changes.
+# Claude makes the change on a branch, builds it, deploys a preview, screenshots it,
+# and posts the result back into the Slack thread with Merge & deploy / Discard buttons.
+on:
+  repository_dispatch:
+    types: [slack-change]
+
+concurrency:
+  group: ${{ github.event.client_payload.branch }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  change:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BRANCH: ${{ github.event.client_payload.branch }}
+      THREAD_TS: ${{ github.event.client_payload.thread_ts }}
+      SLACK_CHANNEL: ${{ github.event.client_payload.channel }}
+    steps:
+      - name: Check the request
+        run: |
+          [[ "$BRANCH" =~ ^slack/change-[0-9]+-[0-9]+$ ]] || { echo "Bad branch name"; exit 1; }
+          [[ "$THREAD_TS" =~ ^[0-9]+\.[0-9]+$ ]] || { echo "Bad thread"; exit 1; }
+          [[ "$SLACK_CHANNEL" == "${{ vars.SLACK_CHANGES_CHANNEL }}" ]] || { echo "Wrong channel"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Switch to the change branch
+        run: |
+          git config user.name "AllCare website bot"
+          git config user.email "website-bot@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix site
+          npm install -g @anthropic-ai/claude-code
+
+      - name: Prepare the request
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: node scripts/prepare-request.mjs
+
+      - name: Claude makes the change
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude -p "$(cat .slack/prompt.md)" \
+            --permission-mode acceptEdits \
+            --allowedTools "Read" "Edit" "Write" "Glob" "Grep" "Bash(npm run build)" "Bash(npm test)" "Bash(cd site && npm run build)" "Bash(cd site && npm test)" \
+            --max-turns 40 \
+            --output-format text > .slack/summary.txt
+          cat .slack/summary.txt
+
+      - name: Keep changes inside site/ and check for leaked secrets
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Build settings and dependencies are off limits to Slack requests.
+          git checkout -- site/package.json site/package-lock.json site/astro.config.mjs 2>/dev/null || true
+          outside=$(git status --porcelain --untracked-files=all | awk '{print $2}' | grep -v -E '^(site/|\.slack/)' || true)
+          if [ -n "$outside" ]; then
+            echo "Reverting changes outside site/:"; echo "$outside"
+            echo "$outside" | xargs -r git checkout -- 2>/dev/null || true
+            echo "$outside" | xargs -r rm -rf --
+          fi
+          git add -N site
+          if git diff -- site | grep -qF "$ANTHROPIC_API_KEY" || grep -rqF "$ANTHROPIC_API_KEY" site/src site/public; then
+            echo "A secret ended up in the website files. Stopping."; exit 1
+          fi
+
+      - name: Build and test
+        working-directory: site
+        env:
+          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+        run: |
+          npm run build
+          npm test
+
+      - name: Commit
+        id: commit
+        run: |
+          git add site
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            # Still post a preview if earlier rounds left changes on this branch.
+            if [ -z "$(git log origin/main..HEAD --oneline)" ]; then exit 0; fi
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          node -e '
+            const p = JSON.parse(require("fs").readFileSync(".slack/request.json","utf8"));
+            const first = (p.request || "Update from Slack").split("\n")[0].slice(0, 72);
+            require("fs").writeFileSync(".slack/commit.txt", `${first}\n\n${p.request || ""}\n\nSlack-Thread: ${p.thread_ts}\n`);
+          '
+          git diff --cached --quiet || git commit -F .slack/commit.txt
+          git push origin "$BRANCH"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Nothing changed
+        if: steps.commit.outputs.pushed != 'true'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: node scripts/slack-notify.mjs nochange
+
+      - name: Open or update the pull request
+        if: steps.commit.outputs.pushed == 'true'
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          num=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -z "$num" ]; then
+            title=$(head -n1 .slack/commit.txt)
+            gh pr create --head "$BRANCH" --base main --title "$title" --body "Requested in Slack (thread $THREAD_TS).
+
+          $(cat .slack/summary.txt)"
+            num=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          fi
+          echo "number=$num" >> "$GITHUB_OUTPUT"
+          echo "url=$(gh pr view "$num" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy preview
+        if: steps.commit.outputs.pushed == 'true'
+        id: preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          out=$(npx --yes wrangler@4 pages deploy site/dist --project-name "${{ vars.PAGES_PROJECT }}" --branch "$BRANCH" --commit-dirty=true 2>&1)
+          echo "$out"
+          url=$(echo "$out" | grep -oE 'https://[a-zA-Z0-9.-]+\.pages\.dev' | head -n1)
+          [ -n "$url" ] || { echo "No preview URL found"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Screenshot and check the preview
+        if: steps.commit.outputs.pushed == 'true'
+        run: |
+          npx playwright install --with-deps chromium
+          sleep 10
+          node scripts/qa-screenshots.mjs "${{ steps.preview.outputs.url }}"
+
+      - name: Post the preview to Slack
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.url }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: node scripts/slack-notify.mjs preview
+
+      - name: Tell Slack it failed
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: node scripts/slack-notify.mjs failed

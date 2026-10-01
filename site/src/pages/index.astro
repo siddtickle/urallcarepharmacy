@@ -1,0 +1,267 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Stars from '../components/Stars.astro';
+import { store, apiBase, turnstileSiteKey } from '../config';
+import { HOURS_TEXT } from '../lib/hours';
+
+const topics = [
+  'General question',
+  'Medical and orthopedic supplies',
+  'Insurance and billing',
+  'Flu or COVID-19 shots',
+  'Delivery',
+  'Business or vendor inquiry',
+  'Website feedback',
+  'Other',
+];
+---
+<Base
+  title="AllCare Pharmacy | Family Pharmacy and Medical Supplies in Oxon Hill, MD"
+  description="Family-owned, minority-owned pharmacy in Oxon Hill, MD. Prescriptions, transfers, delivery, flu and COVID-19 shots, and orthopedic and medical supplies. Call 301-485-0000."
+>
+  <a class="visually-hidden" href="#main">Skip to content</a>
+
+  <div class="topbar">
+    <div class="wrap">
+      <div class="topbar-left">
+        <span class="topbar-hours">{HOURS_TEXT}</span>
+        <span><strong>Flu and COVID-19 shots:</strong> walk in or call <a href={store.phoneHref}>{store.phone}</a></span>
+      </div>
+      <a class="topbar-social" href={store.facebook} rel="noopener"><Icon name="facebook" size={16} /> Facebook</a>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="wrap header-row">
+      <a class="logo" href="/" aria-label={`${store.shortName} home`}>
+        <img src="/images/allcare-logo.png" alt="AllCare Pharmacy, Orthopedic and Medical Supplies" width="970" height="213" />
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#services">Services</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#about">About</a>
+        <a href="#visit">Visit</a>
+        <a class="btn btn-red" href="#contact-form">Contact Us</a>
+      </nav>
+      <button type="button" class="menu-btn" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu" data-menu-btn>
+        <Icon name="menu" class="icon-menu" /><Icon name="close" class="icon-close" />
+      </button>
+    </div>
+    <nav id="mobile-menu" class="mobile-menu" aria-label="Main" data-menu>
+      <a href="#services">Services</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#about">About</a>
+      <a href="#visit">Visit</a>
+      <a class="btn btn-red" href="#contact-form">Contact Us</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <div class="pill-row">
+            <a class="rating-pill" href="#reviews">
+              <Stars rating={store.fallbackRating} />
+              <strong data-rating>{store.fallbackRating.toFixed(1)}</strong>
+              <span class="muted">from <span data-review-count>{store.fallbackReviewCount}</span> Google reviews</span>
+            </a>
+            <span class="status-pill" role="status" data-status><span class="dot"></span><b data-status-label>Hours</b> <span data-status-detail>{HOURS_TEXT}</span></span>
+          </div>
+          <h1>Your neighborhood pharmacy in Oxon Hill.</h1>
+          <p>Family-owned and minority-owned. Competitive prices on medications, a full stock of orthopedic and medical supplies, and a pharmacist who knows your name.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href={store.phoneHref}><Icon name="phone" size={20} /> Call {store.phone}</a>
+            <a class="btn btn-outline" href="#refill">Refill a prescription</a>
+          </div>
+        </div>
+        <picture class="hero-photo">
+          <source type="image/webp" srcset="/images/storefront-640.webp 640w, /images/storefront-1200.webp 1200w" sizes="(max-width: 860px) 100vw, 580px" />
+          <img src="/images/storefront-1200.jpg" srcset="/images/storefront-640.jpg 640w, /images/storefront-1200.jpg 1200w" sizes="(max-width: 860px) 100vw, 580px" alt="The AllCare Pharmacy and Medical Supplies storefront at 6341 Livingston Road" width="1200" height="1339" fetchpriority="high" />
+        </picture>
+      </div>
+    </section>
+
+    <section class="wrap actions" id="refill" aria-label="Prescription services">
+      <div class="actions-grid">
+        <a class="action" href={store.phoneHref}>
+          <Icon name="pill" size={32} />
+          <h3>Refill a prescription</h3>
+          <p>Call with your prescription number and we'll have it ready, usually the same day.</p>
+          <span class="more">Call {store.phone} →</span>
+        </a>
+        <a class="action" href={store.phoneHref}>
+          <Icon name="transfer" size={32} />
+          <h3>Transfer a prescription</h3>
+          <p>Switching from another pharmacy? Tell us its name and we handle the rest.</p>
+          <span class="more">Call to transfer →</span>
+        </a>
+        <a class="action" href={store.phoneHref}>
+          <Icon name="repeat" size={32} />
+          <h3>Automatic refills</h3>
+          <p>Sign up once and we refill your regular medications automatically.</p>
+          <span class="more">Call to sign up →</span>
+        </a>
+        <a class="action" href={store.phoneHref}>
+          <Icon name="truck" size={32} />
+          <h3>Delivery</h3>
+          <p>Can't make it in? Ask about delivery to Oxon Hill and nearby neighborhoods.</p>
+          <span class="more">Call to arrange →</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="wrap reviews" id="reviews" aria-labelledby="reviews-title">
+      <div class="reviews-head">
+        <div>
+          <span class="eyebrow">What our neighbors say</span>
+          <h2 class="h2" id="reviews-title">The care big chains can't match.</h2>
+        </div>
+        <div class="score">
+          <span class="score-num" data-rating>{store.fallbackRating.toFixed(1)}</span>
+          <span class="score-meta">
+            <Stars rating={store.fallbackRating} size={22} />
+            <span><span data-review-count>{store.fallbackReviewCount}</span> reviews on Google</span>
+          </span>
+        </div>
+      </div>
+      <div class="review-grid" data-review-grid aria-live="polite">
+        <div class="review skeleton" aria-hidden="true"></div>
+        <div class="review skeleton" aria-hidden="true"></div>
+        <div class="review skeleton" aria-hidden="true"></div>
+        <div class="review skeleton" aria-hidden="true"></div>
+      </div>
+      <div class="reviews-ctas">
+        <a class="btn btn-primary" href={store.mapsUrl} rel="noopener"><span>Read all <span data-review-count>{store.fallbackReviewCount}</span> reviews on Google</span></a>
+        <a class="btn btn-outline" href={store.writeReviewUrl} rel="noopener">Leave us a review</a>
+      </div>
+    </section>
+
+    <section class="services" id="services" aria-labelledby="services-title">
+      <div class="wrap">
+        <div class="services-intro">
+          <div>
+            <span class="eyebrow">Welcome to AllCare</span>
+            <h2 class="h2" id="services-title">Your pharmacy of choice</h2>
+          </div>
+          <p>Minority owned and operated, serving Oxon Hill and surrounding communities with competitive prices, a wide range of orthopedic supplies and individualized service. Every visit includes a free consultation with our pharmacist.</p>
+        </div>
+        <ul class="service-grid">
+          <li class="service"><Icon name="syringe" size={28} /><div><h3>Flu and COVID-19 shots</h3><p>Walk in or call to schedule.</p></div></li>
+          <li class="service"><Icon name="flask" size={28} /><div><h3>Compounding (basic)</h3><p>Custom preparations made in-house.</p></div></li>
+          <li class="service"><Icon name="kit" size={28} /><div><h3>Orthopedic and medical supplies</h3><p>Braces, nebulizers, mobility aids and more.</p></div></li>
+          <li class="service"><Icon name="chat" size={28} /><div><h3>Free pharmacist consultation</h3><p>Ask about your medications, any time.</p></div></li>
+          <li class="service"><Icon name="globe" size={28} /><div><h3>Multilingual staff</h3><p>Ask us about the languages we speak.</p></div></li>
+          <li class="service"><Icon name="paw" size={28} /><div><h3>Pet medications</h3><p>Prescriptions for the whole family.</p></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap about" id="about" aria-label="About us">
+      <div class="card">
+        <h3>Our mission</h3>
+        <p>We strive to serve Oxon Hill and the surrounding communities by offering competitive prices on medications, orthopedic supplies, and unparalleled customer service.</p>
+      </div>
+      <div class="card">
+        <h3>Talk to our pharmacist</h3>
+        <p>Free, friendly health advice from a professional who knows you. Stop by the counter or call us with any question about your medications.</p>
+        <a href={store.phoneHref}>Call {store.phone} →</a>
+      </div>
+    </section>
+
+    <section class="contact" id="visit" aria-labelledby="visit-title">
+      <div class="wrap contact-grid">
+        <div class="visit">
+          <span class="eyebrow">You are our top priority</span>
+          <h2 class="h2" id="visit-title">Visit or reach out</h2>
+          <div class="visit-details">
+            <address style="font-style: normal"><strong>{store.street}</strong><br />{store.city}, {store.region} {store.postalCode}</address>
+            <div>Phone <a href={store.phoneHref}><strong>{store.phone}</strong></a><br />Fax {store.fax}</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+              <div><strong>Hours</strong><br />{HOURS_TEXT}</div>
+              <span class="status-pill" data-status><span class="dot"></span><b data-status-label>Hours</b> <span data-status-detail></span></span>
+            </div>
+          </div>
+          <figure class="visit-photo">
+            <img src="/images/storefront-640.jpg" alt="AllCare Pharmacy storefront with its red and blue sign, in the shopping center at 6341 Livingston Road" width="640" height="714" loading="lazy" />
+            <figcaption>Look for our sign at 6341 Livingston Rd.</figcaption>
+          </figure>
+          <div class="btn-row">
+            <a class="btn btn-outline" href={store.mapsUrl} rel="noopener">Get directions</a>
+          </div>
+          <iframe class="map" title="Map to AllCare Pharmacy" src={store.mapEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+
+        <form class="form-card" id="contact-form" data-contact-form data-api={apiBase} novalidate>
+          <h3>Contact Us</h3>
+          <div class="notice" role="note">
+            <Icon name="info" size={20} />
+            <p><strong>Please don't include medication names or health details.</strong> For prescriptions, refills or anything urgent, call us at <a href={store.phoneHref}>{store.phone}</a>.</p>
+          </div>
+          <div class="fields">
+            <div class="field full">
+              <label for="cf-name">Your name</label>
+              <input id="cf-name" name="name" autocomplete="name" required maxlength="100" />
+            </div>
+            <div class="field">
+              <label for="cf-email">Email <span class="hint">(email or phone required)</span></label>
+              <input id="cf-email" name="email" type="email" autocomplete="email" maxlength="200" />
+            </div>
+            <div class="field">
+              <label for="cf-phone">Phone</label>
+              <input id="cf-phone" name="phone" type="tel" autocomplete="tel" maxlength="30" />
+            </div>
+            <div class="field full">
+              <fieldset>
+                <legend>How should we reply?</legend>
+                <label class="radio"><input type="radio" name="contactPref" value="email" checked /> Email</label>
+                <label class="radio"><input type="radio" name="contactPref" value="phone" /> Phone call</label>
+                <label class="radio"><input type="radio" name="contactPref" value="text" /> Text message</label>
+              </fieldset>
+            </div>
+            <div class="field full">
+              <label for="cf-topic">Topic</label>
+              <select id="cf-topic" name="topic" required>
+                {topics.map((t) => <option value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div class="field full">
+              <label for="cf-message">Message</label>
+              <textarea id="cf-message" name="message" required maxlength="3000"></textarea>
+            </div>
+            <div class="hp" aria-hidden="true">
+              <label for="cf-company">Company</label>
+              <input id="cf-company" name="company" tabindex="-1" autocomplete="off" />
+            </div>
+          </div>
+          <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="flexible" data-appearance="interaction-only"></div>
+          <div class="form-status" data-form-status role="status" aria-live="polite" hidden></div>
+          <button class="btn btn-red" type="submit">Send message</button>
+          <p class="small">We use your details only to reply to this message. See our <a href="/privacy">privacy policy</a>.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span>© {new Date().getFullYear()} {store.name}</span>
+      <nav aria-label="Footer">
+        <a href="/privacy">Privacy policy</a>
+        <a href={store.facebook} rel="noopener">Facebook</a>
+      </nav>
+    </div>
+  </footer>
+
+  <div class="call-bar">
+    <a class="btn btn-primary" href={store.phoneHref}><Icon name="phone" size={18} /> Call us</a>
+    <a class="btn btn-outline" href={store.mapsUrl} rel="noopener">Directions</a>
+  </div>
+
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script>
+    import { init } from '../scripts/main';
+    init();
+  </script>
+</Base>

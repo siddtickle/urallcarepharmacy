@@ -1,0 +1,40 @@
+name = "allcare-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+workers_dev = false
+
+# The backend answers on its own subdomain. The domain must be on Cloudflare.
+routes = [{ pattern = "api.urallcarepharmacy.com", custom_domain = true }]
+
+# Check Google for new reviews every 15 minutes.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[[kv_namespaces]]
+binding = "STATE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID" # wrangler kv namespace create STATE
+
+[observability]
+enabled = true
+
+[vars]
+SITE_URL = "https://www.urallcarepharmacy.com"
+# Sites allowed to submit the contact form: production plus preview builds.
+ALLOWED_ORIGINS = "www.urallcarepharmacy.com,urallcarepharmacy.com,*.allcare-pharmacy.pages.dev,localhost:4321"
+STORE_PHONE = "301-485-0000"
+EMAIL_FROM = "AllCare Pharmacy <hello@urallcarepharmacy.com>"
+EMAIL_REPLY_TO = "urallcarepharmacy@gmail.com"
+GITHUB_REPO = "REPLACE_OWNER/allcare-pharmacy-site"
+# Slack channel IDs (right-click a channel > View channel details > bottom of the About tab)
+SLACK_INQUIRIES_CHANNEL = "C0000000000"
+SLACK_REVIEWS_CHANNEL = "C0000000000"
+SLACK_CHANGES_CHANNEL = "C0000000000"
+# Slack member IDs allowed to press "Merge & deploy" (profile > ⋮ > Copy member ID), comma separated
+SLACK_DEPLOYERS = "U0000000000"
+# From `node scripts/google-auth.mjs`
+GOOGLE_ACCOUNT_ID = "0"
+GOOGLE_LOCATION_ID = "0"
+
+# Secrets, set once with `npx wrangler secret put NAME`:
+# SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET, TURNSTILE_SECRET, RESEND_API_KEY,
+# GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, GITHUB_TOKEN

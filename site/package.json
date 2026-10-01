@@ -1,0 +1,15 @@
+{
+  "name": "allcare-pharmacy-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "node --test --experimental-strip-types src/lib/*.test.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/figtree": "^5.1.1",
+    "astro": "^5.0.0"
+  }
+}

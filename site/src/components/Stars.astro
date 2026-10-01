@@ -1,0 +1,9 @@
+---
+interface Props { rating?: number; size?: number; label?: boolean }
+const { rating = 5, size = 18, label = true } = Astro.props;
+const star = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>`;
+const five = star.repeat(5);
+---
+<span class="stars" style={`--pct:${(rating / 5) * 100}`} data-stars role={label ? 'img' : undefined} aria-label={label ? `${rating} out of 5 stars` : undefined}>
+  <span set:html={five} /><span class="fill" set:html={five} />
+</span>
