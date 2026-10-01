@@ -66,6 +66,10 @@ function reviewCard(r: PublicReview): HTMLElement {
 
 async function loadReviews(api: string) {
   const grid = document.querySelector<HTMLElement>('[data-review-grid]');
+  if (!api) {
+    grid?.remove();
+    return;
+  }
   try {
     const res = await fetch(`${api}/api/reviews`, { headers: { accept: 'application/json' } });
     if (!res.ok) throw new Error(String(res.status));
@@ -101,6 +105,18 @@ function initContactForm(form: HTMLFormElement, api: string) {
     if (!data.email?.trim() && !data.phone?.trim()) return show('err', 'Please add an email address or phone number so we can reply.');
     if (data.contactPref === 'email' && !data.email?.trim()) return show('err', 'You chose email for our reply. Please add your email address.');
     if (data.email && !form.querySelector<HTMLInputElement>('#cf-email')!.checkValidity()) return show('err', 'That email address doesn’t look right.');
+
+    // No backend yet (e.g. the temporary GitHub Pages site): open an email to the pharmacy instead.
+    if (!api) {
+      const to = form.dataset.fallbackEmail ?? '';
+      const subject = `Website message: ${data.topic}`;
+      const body = [`Name: ${data.name}`, data.email && `Email: ${data.email}`, data.phone && `Phone: ${data.phone}`, `Prefers: ${data.contactPref}`, '', data.message]
+        .filter((l) => l !== undefined && l !== '')
+        .join('\n');
+      window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      show('ok', `Your email app should open with your message ready to send. If it doesn't, email ${to} or call 301-485-0000.`);
+      return;
+    }
 
     submit.disabled = true;
     submit.textContent = 'Sending…';

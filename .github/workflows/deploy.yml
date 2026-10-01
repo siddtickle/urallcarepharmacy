@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   deploy:
+    # Skipped until the Cloudflare setup in SETUP.md is done (PAGES_PROJECT variable set).
+    if: vars.PAGES_PROJECT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

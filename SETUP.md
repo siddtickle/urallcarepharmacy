@@ -32,7 +32,16 @@ Plan on an afternoon for setup. Google's API approval (step 6) can take days to 
 
 ---
 
-## 1. GitHub
+## 0. Temporary hosting on GitHub Pages (optional)
+
+You can put the site up on GitHub Pages before any of the Cloudflare, Slack or Google setup:
+
+1. Push this repo to GitHub. On a free GitHub account the repo must be **public** for Pages; a private repo needs GitHub Pro. No secrets live in the code, so public is safe.
+2. Repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Every push to `main` runs **GitHub Pages (temporary)** and publishes to `https://<your-username>.github.io/<repo-name>/`.
+
+Until the backend is set up, the rating shows a fixed 4.6, review cards are hidden, and **Contact Us opens the visitor's email app** with their message addressed to urallcarepharmacy@gmail.com. The Cloudflare deploy workflow stays switched off until you set the `PAGES_PROJECT` variable (step 9). When the real site is live, delete `.github/workflows/github-pages.yml` and turn Pages off.
+
 
 1. Create a **private** repository, e.g. `allcare-pharmacy-site`, and push this folder to it.
 2. Repo **Settings → Actions → General → Workflow permissions**: choose *Read and write permissions* and tick **Allow GitHub Actions to create and approve pull requests**.

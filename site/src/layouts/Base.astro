@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { store } from '../config';
+import { store, asset } from '../config';
 
 interface Props { title: string; description: string }
 const { title, description } = Astro.props;
@@ -14,8 +14,8 @@ const schema = {
   telephone: '+1-301-485-0000',
   faxNumber: '+1-301-485-1259',
   email: store.email,
-  image: new URL('/images/storefront-1200.jpg', Astro.site).href,
-  logo: new URL('/images/allcare-logo.png', Astro.site).href,
+  image: new URL(asset('images/storefront-1200.jpg'), Astro.site).href,
+  logo: new URL(asset('images/allcare-logo.png'), Astro.site).href,
   address: { '@type': 'PostalAddress', streetAddress: store.street, addressLocality: store.city, addressRegion: store.region, postalCode: store.postalCode, addressCountry: 'US' },
   geo: { '@type': 'GeoCoordinates', latitude: store.lat, longitude: store.lng },
   hasMap: store.mapsUrl,
@@ -34,14 +34,14 @@ const schema = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href={asset("favicon.png")} />
+    <link rel="apple-touch-icon" href={asset("apple-touch-icon.png")} />
     <meta name="theme-color" content="#0f417f" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL('/images/storefront-1200.jpg', Astro.site).href} />
+    <meta property="og:image" content={new URL(asset('images/storefront-1200.jpg'), Astro.site).href} />
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>

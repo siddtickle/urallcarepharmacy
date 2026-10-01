@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import Stars from '../components/Stars.astro';
-import { store, apiBase, turnstileSiteKey } from '../config';
+import { store, apiBase, turnstileSiteKey, asset } from '../config';
 import { HOURS_TEXT } from '../lib/hours';
 
 const topics = [
@@ -34,8 +34,8 @@ const topics = [
 
   <header class="header">
     <div class="wrap header-row">
-      <a class="logo" href="/" aria-label={`${store.shortName} home`}>
-        <img src="/images/allcare-logo.png" alt="AllCare Pharmacy, Orthopedic and Medical Supplies" width="970" height="213" />
+      <a class="logo" href={asset("/")} aria-label={`${store.shortName} home`}>
+        <img src={asset("images/allcare-logo.png")} alt="AllCare Pharmacy, Orthopedic and Medical Supplies" width="970" height="213" />
       </a>
       <nav class="nav" aria-label="Main">
         <a href="#services">Services</a>
@@ -77,8 +77,8 @@ const topics = [
           </div>
         </div>
         <picture class="hero-photo">
-          <source type="image/webp" srcset="/images/storefront-640.webp 640w, /images/storefront-1200.webp 1200w" sizes="(max-width: 860px) 100vw, 580px" />
-          <img src="/images/storefront-1200.jpg" srcset="/images/storefront-640.jpg 640w, /images/storefront-1200.jpg 1200w" sizes="(max-width: 860px) 100vw, 580px" alt="The AllCare Pharmacy and Medical Supplies storefront at 6341 Livingston Road" width="1200" height="1339" fetchpriority="high" />
+          <source type="image/webp" srcset={`${asset("images/storefront-640.webp")} 640w, ${asset("images/storefront-1200.webp")} 1200w`} sizes="(max-width: 860px) 100vw, 580px" />
+          <img src={asset("images/storefront-1200.jpg")} srcset={`${asset("images/storefront-640.jpg")} 640w, ${asset("images/storefront-1200.jpg")} 1200w`} sizes="(max-width: 860px) 100vw, 580px" alt="The AllCare Pharmacy and Medical Supplies storefront at 6341 Livingston Road" width="1200" height="1339" fetchpriority="high" />
         </picture>
       </div>
     </section>
@@ -184,7 +184,7 @@ const topics = [
             </div>
           </div>
           <figure class="visit-photo">
-            <img src="/images/storefront-640.jpg" alt="AllCare Pharmacy storefront with its red and blue sign, in the shopping center at 6341 Livingston Road" width="640" height="714" loading="lazy" />
+            <img src={asset("images/storefront-640.jpg")} alt="AllCare Pharmacy storefront with its red and blue sign, in the shopping center at 6341 Livingston Road" width="640" height="714" loading="lazy" />
             <figcaption>Look for our sign at 6341 Livingston Rd.</figcaption>
           </figure>
           <div class="btn-row">
@@ -193,7 +193,7 @@ const topics = [
           <iframe class="map" title="Map to AllCare Pharmacy" src={store.mapEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
-        <form class="form-card" id="contact-form" data-contact-form data-api={apiBase} novalidate>
+        <form class="form-card" id="contact-form" data-contact-form data-api={apiBase} data-fallback-email={store.email} novalidate>
           <h3>Contact Us</h3>
           <div class="notice" role="note">
             <Icon name="info" size={20} />
@@ -235,10 +235,10 @@ const topics = [
               <input id="cf-company" name="company" tabindex="-1" autocomplete="off" />
             </div>
           </div>
-          <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="flexible" data-appearance="interaction-only"></div>
+          {apiBase && <div class="cf-turnstile" data-sitekey={turnstileSiteKey} data-size="flexible" data-appearance="interaction-only"></div>}
           <div class="form-status" data-form-status role="status" aria-live="polite" hidden></div>
           <button class="btn btn-red" type="submit">Send message</button>
-          <p class="small">We use your details only to reply to this message. See our <a href="/privacy">privacy policy</a>.</p>
+          <p class="small">We use your details only to reply to this message. See our <a href={asset("privacy/")}>privacy policy</a>.</p>
         </form>
       </div>
     </section>
@@ -248,7 +248,7 @@ const topics = [
     <div class="wrap">
       <span>© {new Date().getFullYear()} {store.name}</span>
       <nav aria-label="Footer">
-        <a href="/privacy">Privacy policy</a>
+        <a href={asset("privacy/")}>Privacy policy</a>
         <a href={store.facebook} rel="noopener">Facebook</a>
       </nav>
     </div>
@@ -259,7 +259,7 @@ const topics = [
     <a class="btn btn-outline" href={store.mapsUrl} rel="noopener">Directions</a>
   </div>
 
-  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {apiBase && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
   <script>
     import { init } from '../scripts/main';
     init();

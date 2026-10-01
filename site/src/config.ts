@@ -27,3 +27,9 @@ export const store = {
 // Where the backend (Cloudflare Worker) lives. Set PUBLIC_API_BASE at build time.
 export const apiBase: string = import.meta.env.PUBLIC_API_BASE ?? 'https://api.urallcarepharmacy.com';
 export const turnstileSiteKey: string = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '1x00000000000000000000AA';
+
+/** Path to a file in public/, correct whether the site is served from "/" or a subfolder (GitHub Pages). */
+export function asset(path: string): string {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return `${base}/${path.replace(/^\//, '')}`;
+}
