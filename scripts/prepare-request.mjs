@@ -28,7 +28,7 @@ for (const f of payload.files ?? []) {
 
 let history = '';
 try {
-  history = execSync('git log origin/main..HEAD --format=%B', { encoding: 'utf8' }).trim();
+  history = execSync('git log origin/main..HEAD --format=%B', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
 } catch {}
 
 const prompt = `You are updating the website for AllCare Pharmacy, a family-owned pharmacy in Oxon Hill, MD.
